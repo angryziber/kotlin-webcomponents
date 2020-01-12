@@ -1,12 +1,10 @@
-import org.w3c.dom.HTMLElement
-import org.w3c.dom.OPEN
-import org.w3c.dom.ShadowRootInit
-import org.w3c.dom.ShadowRootMode
+import org.w3c.dom.*
+import org.w3c.dom.events.KeyboardEvent
 import kotlin.browser.window
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
-abstract class CustomTag(val tag: String, val observedAttributes: Array<String>? = emptyArray()) {
+abstract class CustomTag(val tag: String, val observedAttributes: Array<String> = emptyArray()) {
     @JsName("init") open fun init(el: HTMLElement) {}
     @JsName("mounted") open fun mounted() {}
     @JsName("unmounted") open fun unmounted() {}
@@ -25,9 +23,9 @@ abstract class CustomTag(val tag: String, val observedAttributes: Array<String>?
     }
 }
 
-abstract class RenderableCustomTag(tag: String, observedAttributes: Array<String>? = emptyArray()) : CustomTag(tag, observedAttributes) {
+abstract class RenderableCustomTag(tag: String, observedAttributes: Array<String> = emptyArray()) : CustomTag(tag, observedAttributes) {
     protected lateinit var element: HTMLElement;
-    private lateinit var shadow: HTMLElement
+    protected lateinit var shadow: HTMLElement
 
     // language=html
     abstract fun render(): String
@@ -50,6 +48,17 @@ abstract class RenderableCustomTag(tag: String, observedAttributes: Array<String
 
         operator fun setValue(thisRef: RenderableCustomTag?, prop: KProperty<*>, value: String) =
           thisRef?.element?.setAttribute(prop.name, value)
+    }
+}
+
+abstract class BindableCustomTag(tag: String, observedAttributes: Array<String>): RenderableCustomTag(tag, observedAttributes) {
+    override fun init(el: HTMLElement) {
+        super.init(el)
+        element.addEventListener("keyup", { e ->
+            val input = shadow.asDynamic().activeElement as? HTMLInputElement
+            val bindProp = input?.getAttribute("bind")
+            if (bindProp != null) element.setAttribute(bindProp, input.value)
+        })
     }
 }
 
