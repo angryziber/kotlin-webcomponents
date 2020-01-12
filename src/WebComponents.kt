@@ -12,17 +12,19 @@ abstract class CustomTag(val tag: String, val observedAttributes: Array<String>?
     @JsName("attributeChanged") open fun attributeChanged(name: String, oldVal: String, newVal: String) {}
 
     companion object {
-        private val wrapImpl = jsFunction("impl", block = ES6_CLASS_ADAPTER) as (JsClass<out CustomTag>) -> () -> dynamic
+        private val wrapImpl = jsFunction("impl", "def", jsCode = ES6_CLASS_ADAPTER) as (JsClass<out CustomTag>, CustomTag) -> () -> dynamic
 
-        fun define(vararg tags: Pair<String, KClass<out CustomTag>>) {
-            tags.forEach { tag ->
-                window.customElements.define(tag.first, wrapImpl(tag.second.js))
+        fun define(vararg tags: KClass<out CustomTag>) {
+            tags.forEach { tagClass ->
+                val impl = tagClass.js
+                val def = js("new impl()") as CustomTag
+                window.customElements.define(def.tag, wrapImpl(impl, def))
             }
         }
     }
 }
 
-abstract class RenderableCustomTag(name: String) : CustomTag(name) {
+abstract class RenderableCustomTag(tag: String) : CustomTag(tag) {
     lateinit var shadow: HTMLElement
 
     // language=html
@@ -43,11 +45,11 @@ abstract class RenderableCustomTag(name: String) : CustomTag(name) {
 }
 
 @JsName("Function")
-private external fun <T> jsFunction(vararg params: String, block: String): T
+private external fun <T> jsFunction(vararg params: String, jsCode: String): T
 
 // language=es6
 private const val ES6_CLASS_ADAPTER = """return class extends HTMLElement {
-    static get observedAttributes() {return impl.observedAttributes}
+    static get observedAttributes() {return def.observedAttributes}
     constructor() {super(); this.inst = new impl(); this.inst.init(this)}
     connectedCallback() {this.inst.mounted()}
     disconnectedCallback() {this.inst.unmounted()}

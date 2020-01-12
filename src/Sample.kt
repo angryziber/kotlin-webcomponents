@@ -1,5 +1,5 @@
 fun main() {
-  CustomTag.define("my-hello" to MyHello::class)
+  CustomTag.define(MyHello::class)
 }
 
 class MyHello: RenderableCustomTag("my-hello") {
