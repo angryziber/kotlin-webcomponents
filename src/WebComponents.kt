@@ -4,7 +4,8 @@ import kotlin.browser.window
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
-abstract class CustomTag(val tag: String, val observedAttributes: Array<String> = emptyArray()) {
+abstract class CustomTag(val tag: String) {
+    protected val observedAttributes: Array<String> = emptyArray()
     @JsName("init") open fun init(el: HTMLElement) {}
     @JsName("mounted") open fun mounted() {}
     @JsName("unmounted") open fun unmounted() {}
@@ -23,8 +24,8 @@ abstract class CustomTag(val tag: String, val observedAttributes: Array<String> 
     }
 }
 
-abstract class RenderableCustomTag(tag: String, observedAttributes: Array<String> = emptyArray()) : CustomTag(tag, observedAttributes) {
-    protected lateinit var element: HTMLElement;
+abstract class RenderableCustomTag(tag: String) : CustomTag(tag) {
+    protected lateinit var element: HTMLElement
     protected lateinit var shadow: HTMLElement
 
     // language=html
@@ -42,16 +43,20 @@ abstract class RenderableCustomTag(tag: String, observedAttributes: Array<String
         shadow.innerHTML = render()
     }
 
-    protected class Attribute() {
+    protected inner class Attribute(private val name: String) {
+        init {
+            observedAttributes.asDynamic().push(name)
+        }
+
         operator fun getValue(thisRef: RenderableCustomTag?, prop: KProperty<*>) =
-          thisRef?.element?.getAttribute(prop.name)
+          thisRef?.element?.getAttribute(name)
 
         operator fun setValue(thisRef: RenderableCustomTag?, prop: KProperty<*>, value: String) =
-          thisRef?.element?.setAttribute(prop.name, value)
+          thisRef?.element?.setAttribute(name, value)
     }
 }
 
-abstract class BindableCustomTag(tag: String, observedAttributes: Array<String>): RenderableCustomTag(tag, observedAttributes) {
+abstract class BindableCustomTag(tag: String): RenderableCustomTag(tag) {
     override fun init(el: HTMLElement) {
         super.init(el)
         element.addEventListener("keyup", { e ->
@@ -67,7 +72,7 @@ private external fun <T> jsFunction(vararg params: String, jsCode: String): T
 
 // language=es6
 private const val ES6_CLASS_ADAPTER = """return class extends HTMLElement {
-    static get observedAttributes() {return def.observedAttributes}
+    static get observedAttributes() {console.log(def.observedAttributes);return def.observedAttributes}
     constructor() {super(); this.inst = new impl(); this.inst.init(this)}
     connectedCallback() {this.inst.mounted()}
     disconnectedCallback() {this.inst.unmounted()}
