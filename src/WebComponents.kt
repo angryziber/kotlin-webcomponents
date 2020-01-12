@@ -4,6 +4,7 @@ import org.w3c.dom.ShadowRootInit
 import org.w3c.dom.ShadowRootMode
 import kotlin.browser.window
 import kotlin.reflect.KClass
+import kotlin.reflect.KProperty
 
 abstract class CustomTag(val tag: String, val observedAttributes: Array<String>? = emptyArray()) {
     @JsName("init") open fun init(el: HTMLElement) {}
@@ -25,14 +26,14 @@ abstract class CustomTag(val tag: String, val observedAttributes: Array<String>?
 }
 
 abstract class RenderableCustomTag(tag: String, observedAttributes: Array<String>? = emptyArray()) : CustomTag(tag, observedAttributes) {
-    protected lateinit var root: HTMLElement;
+    protected lateinit var element: HTMLElement;
     private lateinit var shadow: HTMLElement
 
     // language=html
     abstract fun render(): String
 
     override fun init(el: HTMLElement) {
-        root = el
+        element = el
         shadow = el.attachShadow(ShadowRootInit(ShadowRootMode.OPEN)).unsafeCast<HTMLElement>()
     }
 
@@ -41,6 +42,14 @@ abstract class RenderableCustomTag(tag: String, observedAttributes: Array<String
 
     private fun doRender() {
         shadow.innerHTML = render()
+    }
+
+    protected class Attribute() {
+        operator fun getValue(thisRef: RenderableCustomTag?, prop: KProperty<*>) =
+          thisRef?.element?.getAttribute(prop.name)
+
+        operator fun setValue(thisRef: RenderableCustomTag?, prop: KProperty<*>, value: String) =
+          thisRef?.element?.setAttribute(prop.name, value)
     }
 }
 
