@@ -1,21 +1,43 @@
 import org.w3c.dom.HTMLElement
+import org.w3c.dom.OPEN
+import org.w3c.dom.ShadowRootInit
+import org.w3c.dom.ShadowRootMode
 import kotlin.browser.window
 
-open class CustomTag(val name: String, val observedAttributes: Array<String>? = emptyArray()) {
+abstract class CustomTag(val tag: String, val observedAttributes: Array<String>? = emptyArray()) {
     @JsName("init") open fun init(el: HTMLElement) {}
-    @JsName("mounted") open fun mounted(el: HTMLElement) {}
-    @JsName("unmounted") open fun unmounted(el: HTMLElement) {}
-    @JsName("attributeChanged") open fun attributeChanged(el: HTMLElement, attrName: String, oldVal: String, newVal: String) {}
-    @JsName("adopted") open fun adopted(el: HTMLElement) {}
+    @JsName("mounted") open fun mounted() {}
+    @JsName("unmounted") open fun unmounted() {}
+    @JsName("attributeChanged") open fun attributeChanged(name: String, oldVal: String, newVal: String) {}
 
     companion object {
         private val wrapImpl = jsFunction("spec", block = ES6_CLASS_ADAPTER) as (spec: CustomTag) -> () -> dynamic
 
         fun define(vararg tags: CustomTag) {
             tags.forEach { tag ->
-                window.customElements.define(tag.name, wrapImpl(tag))
+                window.customElements.define(tag.tag, wrapImpl(tag))
             }
         }
+    }
+}
+
+abstract class RenderableCustomTag(name: String) : CustomTag(name) {
+    lateinit var shadow: HTMLElement
+
+    // language=html
+    abstract fun render(): String
+
+    override fun init(el: HTMLElement) {
+        shadow = el.attachShadow(ShadowRootInit(ShadowRootMode.OPEN)).unsafeCast<HTMLElement>()
+        doRender()
+    }
+
+    override fun attributeChanged(name: String, oldVal: String, newVal: String) {
+        doRender()
+    }
+
+    private fun doRender() {
+        shadow.innerHTML = render()
     }
 }
 
@@ -26,8 +48,7 @@ private external fun <T> jsFunction(vararg params: String, block: String): T
 private const val ES6_CLASS_ADAPTER = """return class extends HTMLElement {
     static get observedAttributes() {return spec.observedAttributes}
     constructor() {super(); spec.init(this)}
-    connectedCallback() {spec.mounted(this)}
-    disconnectedCallback() {spec.unmounted(this)}
-    attributeChangedCallback(attrName, oldVal, newVal) {spec.attributeChanged(this, attrName, oldVal, newVal)}
-    adoptedCallback() {spec.adopted(this)}
+    connectedCallback() {spec.mounted()}
+    disconnectedCallback() {spec.unmounted()}
+    attributeChangedCallback(attrName, oldVal, newVal) {spec.attributeChanged(attrName, oldVal, newVal)}
 }"""
