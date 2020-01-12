@@ -39,16 +39,16 @@ abstract class RenderableCustomTag(tag: String) : CustomTag(tag) {
         shadow.innerHTML = render()
     }
 
-    protected inner class Attribute(private val name: String) {
+    protected inner class attr(private val name: String) {
         init {
             observedAttributes.asDynamic().push(name)
         }
 
         operator fun getValue(thisRef: RenderableCustomTag?, prop: KProperty<*>) =
-          thisRef?.element?.getAttribute(name)
+          thisRef?.element?.attr(name)
 
         operator fun setValue(thisRef: RenderableCustomTag?, prop: KProperty<*>, value: String) =
-          thisRef?.element?.setAttribute(name, value)
+          thisRef?.element?.attr(name, value)
     }
 }
 
@@ -57,7 +57,7 @@ abstract class BindableCustomTag(tag: String): RenderableCustomTag(tag) {
         super.init(el)
         shadow.on("change") { e ->
             val input = e.target as? HTMLInputElement
-            val bindProp = input?.getAttribute("bind")
+            val bindProp = input?.attr("bind")
             if (bindProp != null) element.setAttribute(bindProp, input.value)
         }
     }
@@ -65,7 +65,7 @@ abstract class BindableCustomTag(tag: String): RenderableCustomTag(tag) {
     override fun doRender() {
         super.doRender()
         shadow.findAll<HTMLInputElement>("[bind]").forEach { el ->
-            el.value = element.getAttribute(el.getAttribute("bind")!!)!!
+            el.value = element.attr(el.attr("bind")!!)!!
         }
     }
 }
