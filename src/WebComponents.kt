@@ -35,7 +35,7 @@ abstract class RenderableCustomTag(tag: String) : CustomTag(tag) {
     override fun mounted() = doRender()
     override fun attributeChanged(name: String, oldVal: String, newVal: String) = doRender()
 
-    private fun doRender() {
+    protected open fun doRender() {
         shadow.innerHTML = render()
     }
 
@@ -59,6 +59,13 @@ abstract class BindableCustomTag(tag: String): RenderableCustomTag(tag) {
             val input = e.target as? HTMLInputElement
             val bindProp = input?.getAttribute("bind")
             if (bindProp != null) element.setAttribute(bindProp, input.value)
+        }
+    }
+
+    override fun doRender() {
+        super.doRender()
+        shadow.findAll<HTMLInputElement>("[bind]").forEach { el ->
+            el.value = element.getAttribute(el.getAttribute("bind")!!)!!
         }
     }
 }

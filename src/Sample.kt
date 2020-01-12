@@ -12,6 +12,6 @@ class MyBinding: BindableCustomTag("my-binding") {
   private val name by Attribute("name")
 
   override fun render() = """
-    <input type="text" value="$name" bind="name">
+    <input type="text" bind="name">
   """.trimIndent()
 }
