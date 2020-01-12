@@ -24,20 +24,20 @@ abstract class CustomTag(val tag: String, val observedAttributes: Array<String>?
     }
 }
 
-abstract class RenderableCustomTag(tag: String) : CustomTag(tag) {
-    lateinit var shadow: HTMLElement
+abstract class RenderableCustomTag(tag: String, observedAttributes: Array<String>? = emptyArray()) : CustomTag(tag, observedAttributes) {
+    protected lateinit var root: HTMLElement;
+    private lateinit var shadow: HTMLElement
 
     // language=html
     abstract fun render(): String
 
     override fun init(el: HTMLElement) {
+        root = el
         shadow = el.attachShadow(ShadowRootInit(ShadowRootMode.OPEN)).unsafeCast<HTMLElement>()
-        doRender()
     }
 
-    override fun attributeChanged(name: String, oldVal: String, newVal: String) {
-        doRender()
-    }
+    override fun mounted() = doRender()
+    override fun attributeChanged(name: String, oldVal: String, newVal: String) = doRender()
 
     private fun doRender() {
         shadow.innerHTML = render()
