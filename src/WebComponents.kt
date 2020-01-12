@@ -55,11 +55,11 @@ abstract class RenderableCustomTag(tag: String) : CustomTag(tag) {
 abstract class BindableCustomTag(tag: String): RenderableCustomTag(tag) {
     override fun init(el: HTMLElement) {
         super.init(el)
-        element.addEventListener("keyup", { e ->
-            val input = shadow.asDynamic().activeElement as? HTMLInputElement
+        shadow.on("change") { e ->
+            val input = e.target as? HTMLInputElement
             val bindProp = input?.getAttribute("bind")
             if (bindProp != null) element.setAttribute(bindProp, input.value)
-        })
+        }
     }
 }
 
