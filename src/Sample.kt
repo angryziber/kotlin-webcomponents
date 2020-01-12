@@ -1,5 +1,5 @@
 fun main() {
-  CustomTag.define(MyHello::class, MyBinding::class)
+  CustomTag.define(MyHello(), MyBinding())
 }
 
 class MyHello: RenderableCustomTag("my-hello") {
