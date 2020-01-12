@@ -1,5 +1,5 @@
 fun main() {
-  CustomTag.define(MyHello(), MyBinding())
+  CustomTag.define(MyHello(), MyBinding(), MyCombined())
 }
 
 class MyHello: RenderableCustomTag("my-hello") {
@@ -11,10 +11,23 @@ class MyHello: RenderableCustomTag("my-hello") {
 class MyBinding: BindableCustomTag("my-binding") {
   private val name by attr("name")
 
+  // language=html
   override fun render() = """
     <div>
       <input type="text" bind="name">
       <div>You entered: <i>$name</i></div>
+    </div>
+  """.trimIndent()
+}
+
+class MyCombined: RenderableCustomTag("my-combined") {
+  private val name by attr("name")
+
+  // language=html
+  override fun render() = """
+    <div>
+      <my-hello name="$name"><i>Hello</i></my-hello>
+      <my-binding name="$name"></my-bidinging>
     </div>
   """.trimIndent()
 }

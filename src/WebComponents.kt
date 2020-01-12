@@ -4,7 +4,7 @@ import kotlin.reflect.KProperty
 
 abstract class CustomTag(val tag: String) {
     protected val observedAttributes: Array<String> = emptyArray()
-    @JsName("init") open fun init(el: HTMLElement) {}
+    @JsName("init") open fun init(element: HTMLElement) {}
     @JsName("mounted") open fun mounted() {}
     @JsName("unmounted") open fun unmounted() {}
     @JsName("attributeChanged") open fun attributeChanged(name: String, oldVal: String, newVal: String) {}
@@ -58,7 +58,7 @@ abstract class BindableCustomTag(tag: String): RenderableCustomTag(tag) {
         inner.on("change") { e ->
             val input = e.target as? HTMLInputElement
             val bindProp = input?.attr("bind")
-            if (bindProp != null) outer.setAttribute(bindProp, input.value)
+            if (bindProp != null) outer.attr(bindProp, input.value)
         }
     }
 
