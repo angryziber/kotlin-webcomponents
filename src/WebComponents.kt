@@ -22,29 +22,12 @@ open class CustomTag(val name: String, val observedAttributes: Array<String>? = 
 @JsName("Function")
 private external fun <T> jsFunction(vararg params: String, block: String): T
 
+// language=es6
 private const val ES6_CLASS_ADAPTER = """return class extends HTMLElement {
-    static get observedAttributes() {
-        return spec.observedAttributes
-    }
-
-    constructor() {
-        super();
-        spec.init(this)
-    }
-
-    connectedCallback() {
-        spec.mounted(this)
-    }
-
-    disconnectedCallback() {
-        spec.unmounted(this)
-    }
-
-    attributeChangedCallback(attrName, oldVal, newVal) {
-        spec.attributeChanged(this, attrName, oldVal, newVal)
-    }
-
-    adoptedCallback() {
-        spec.adopted(this)
-    }
+    static get observedAttributes() {return spec.observedAttributes}
+    constructor() {super(); spec.init(this)}
+    connectedCallback() {spec.mounted(this)}
+    disconnectedCallback() {spec.unmounted(this)}
+    attributeChangedCallback(attrName, oldVal, newVal) {spec.attributeChanged(this, attrName, oldVal, newVal)}
+    adoptedCallback() {spec.adopted(this)}
 }"""
